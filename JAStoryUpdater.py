@@ -14,54 +14,6 @@ import json
 # Maximum number of records to return for main data items
 MAX = 1000
 
-def replace_non_ascii_with_spaces(text):
-    """
-    Scans a string and replaces all characters outside of standard ASCII (0-127) with spaces.
-
-    Parameters:
-    text (str): The input string to be processed.
-
-    Returns:
-    str: The processed string with non-ASCII characters replaced by spaces.
-    """
-    return ''.join([char if ord(char) < 128 else ' ' for char in text])
-
-def replace_non_ascii_and_newlines_with_spaces(text):
-    """
-    Scans a string and replaces all characters outside of standard ASCII (0-127), 
-    carriage returns (\r), and new line characters (\n) with spaces.
-
-    Parameters:
-    text (str): The input string to be processed.
-
-    Returns:
-    str: The processed string with non-ASCII characters, carriage returns, and new line characters replaced by spaces.
-    """
-    return ''.join([' ' if ord(char) >= 128 or char in ['\r', '\n'] else char for char in text])
-
-def get_key_info(dataArray, id):
-    """
-    Scans the given array of objects, looking for the one with the given id, and return
-    key information about it.
-    
-    Parameters:
-    dataArray: Array of objects to scan
-    id: ID number to look for
-    
-    Returns:
-    str: The ID number and the descriptive name/title of it, if found.  An empty string
-    is returned if it is not found.
-    
-    This function assumes that the given array has a field called 'id' in it.
-    """
-    tmpStr = ""
-    for item in dataArray:
-        if (item['id'] == id):
-            tmpStr = str(item['id'])
-            if 'title' in item:
-                tmpStr = tmpStr + "/" + item['title']
-    return tmpStr
-                                                                                                         
 ####################################################################################################################################################################################
 def main():
 ####################################################################################################################################################################################
@@ -73,8 +25,6 @@ def main():
     # Collect api server and endpoint. Also collect all of the instance json infomation we need into arrays with CollectUsrMenuItems
     common.CollectApiInfo()
  
-    print("Jira Align Version Number: " + cfg.jaVersion)
-
     # Collect all Program information and save it
     programArray = common.ReadAllItems('programs', MAX)
     print("A total of " + str(len(programArray)) + " Programs were retrieved from Jira Align")
@@ -97,8 +47,8 @@ def main():
     # Print out the name of the Program so it can be visually verified
     print("")
     print("Verify these are correct:")
-    print(" Program to search in: " + get_key_info(programArray, programId))
-    print(" PI to set Stories to: " + get_key_info(releaseArray, newPIID))
+    print(" Program to search in: " + common.get_key_info(programArray, programId))
+    print(" PI to set Stories to: " + common.get_key_info(releaseArray, newPIID))
     print("")
 
     # Collect selected information about all JA Stories information and save it
