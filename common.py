@@ -1976,11 +1976,13 @@ def ReadAllItems(which, maxToRead, filterOnProgramID=None):
             # before processing it.  If it's not processed, then it won't be
             # in the output.
             if (filterOnProgramID is not None):
-                if (eachWorkItem['programId'] != filterOnProgramID):
+                #if (eachWorkItem['programId'] != filterOnProgramID):
+                if (eachWorkItem['primaryProgramId'] != filterOnProgramID):
                     continue
+
+            line_count += 1
             thisItem = {}
             ExtractItemData(which, eachWorkItem, thisItem)
-            line_count += 1
             itemArr.append(thisItem)
 
         # If we got all the items, the return what we have
@@ -1997,3 +1999,86 @@ def ReadAllItems(which, maxToRead, filterOnProgramID=None):
 
     print('Loaded ' + str(line_count) + " items of type " + which)
     return itemArr
+
+def ReadOneItem(which, idToFind):
+    """ Read in one work items of the given type (Epic, Feature, Story, etc.) with
+        the given ID number, and return all fields of it to the caller.  
+        Any work items that are deleted/in recycle bin are skipped.
+    Args:
+        which: Which type of work items to retrieve.  
+               Valid values are: epics, capabilities, features, stories, defects, tasks
+        idToFind: Search for a specific Jira Align ID number of the given type
+    """
+    print("Reading item of type " + which + " with ID=" + str(idToFind) + "...")
+    itemArr = []
+
+    # Get the first set of data, which may be everything or may not be
+    fullUrl = cfg.instanceurl + "/" + which + "/" + str(idToFind)
+    items = GetFromJiraAlign(True, fullUrl)
+    Data = items.json()
+
+    while Data != None:
+        for eachWorkItem in Data:
+            if 'isRecycled' in eachWorkItem:
+                itemIsDel = eachWorkItem['isRecycled']
+            else:
+                itemIsDel = False
+            # ONLY Take items that are not in the recycle bin/deleted
+            if itemIsDel is True:
+                continue;
+            
+            thisItem = {}
+            ExtractItemData(which, eachWorkItem, thisItem)
+            itemArr.append(thisItem)
+
+    print('Loaded ' + which + "/" + str(idToFind))
+    return itemArr
+
+def replace_non_ascii_with_spaces(text):
+    """
+    Scans a string and replaces all characters outside of standard ASCII (0-127) with spaces.
+
+    Parameters:
+    text (str): The input string to be processed.
+
+    Returns:
+    str: The processed string with non-ASCII characters replaced by spaces.
+    """
+    return ''.join([char if ord(char) < 128 else ' ' for char in text])
+
+def replace_non_ascii_and_newlines_with_spaces(text):
+    """
+    Scans a string and replaces all characters outside of standard ASCII (0-127), 
+    carriage returns (\r), and new line characters (\n) with spaces.
+
+    Parameters:
+    text (str): The input string to be processed.
+
+    Returns:
+    str: The processed string with non-ASCII characters, carriage returns, and new line characters replaced by spaces.
+    """
+    return ''.join([' ' if ord(char) >= 128 or char in ['\r', '\n'] else char for char in text])
+
+def get_key_info(dataArray, id):
+    """
+    Scans the given array of objects, looking for the one with the given id, and return
+    key information about it.
+    
+    Parameters:
+    dataArray: Array of objects to scan
+    id: ID number to look for
+    
+    Returns:
+    str: The ID number and the descriptive name/title of it, if found.  An empty string
+    is returned if it is not found.
+    
+    This function assumes that the given array has a field called 'id' in it.
+    """
+    tmpStr = ""
+    for item in dataArray:
+        if (item['id'] == id):
+            tmpStr = str(item['id'])
+            if 'title' in item:
+                tmpStr = tmpStr + "/" + item['title']
+    return tmpStr
+                                                                                                         
