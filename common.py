@@ -125,7 +125,7 @@ def CollectApiInfo():
     if USE_DEFAULTS == True:
         cfg.apiendpoint = "/"
         #cfg.instanceurl = "https://foo.jiraalign.com"
-        cfg.instanceurl = "https://footest.jiraalign.com"
+        cfg.instanceurl = "https://foo.jiraalign.com"
     else:
         cfg.apiendpoint = input("Enter the api endpoint for your instance in following format EG. ""cities"". It is very important that you spell this endpoint correctly. Please refer to the api documents E.G https://cprime.agilecraft.com/api-docs/public/ for the apiendpoints available : ")
         #print(apiendpoint)
