@@ -940,7 +940,13 @@ def ReadAllItems(which, maxToRead, filterOnProgramID=None):
     itemArr = []
 
     # Get the first set of data, which may be everything or may not be
-    fullUrl = cfg.instanceurl + "/" + which + "?expand=true"
+    if filterOnProgramID is None:
+        fullUrl = cfg.instanceurl + "/" + which + "?expand=true"
+    else:
+        # Optimize the call by having Jira Align do the filtering
+        fullUrl = cfg.instanceurl + "/" + which + "?expand=true&%24filter=programId%20eq%20" + str(filterOnProgramID)
+    #print(fullUrl)
+
     items = GetFromJiraAlign(True, fullUrl)
     Data = items.json()
     line_count = 0
@@ -961,9 +967,23 @@ def ReadAllItems(which, maxToRead, filterOnProgramID=None):
             # before processing it.  If it's not processed, then it won't be
             # in the output.
             if (filterOnProgramID is not None):
-                #if (eachWorkItem['programId'] != filterOnProgramID):
-                if (eachWorkItem['primaryProgramId'] != filterOnProgramID):
+                # Make sure that we don't have a case where the Program ID 
+                # is specified multiple times.
+                if ('programId' in eachWorkItem) and ('primaryProgramId' in eachWorkItem):
+                    print("CONFLICT")
+                    pass
+
+                # Check to see if the Program we are looking at matches what we
+                # are looking for.  There are two different fields that this info
+                # could be in, depending on the type of item we are looking at,
+                # so we have to check both.
+                if ('programId' in eachWorkItem) and (eachWorkItem['programId'] != filterOnProgramID):
                     continue
+                if ('primaryProgramId' in eachWorkItem) and (eachWorkItem['primaryProgramId'] != filterOnProgramID):
+                    continue
+                # If we get here, then the Program for this item matches what we want
+                # and we should extract all the data for the item and add to the
+                # result array.
 
             line_count += 1
             thisItem = {}
@@ -978,7 +998,12 @@ def ReadAllItems(which, maxToRead, filterOnProgramID=None):
             break
 
         # Otherwise, there are more items to get, so get the next 100
-        moreItems = GetFromJiraAlign(True, cfg.instanceurl + "/" + which + "?&$skip=" + str(skip))
+        if filterOnProgramID is None:
+            fullUrl = cfg.instanceurl + "/" + which + "?&$skip=" + str(skip)
+        else:
+            fullUrl = cfg.instanceurl + "/" + which + \
+                      "?expand=true&%24filter=programId%20eq%20" + str(filterOnProgramID) + "&$skip=" + str(skip)
+        moreItems = GetFromJiraAlign(True, fullUrl)
         Data = moreItems.json()
         skip += 100
 
