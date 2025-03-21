@@ -1021,25 +1021,12 @@ def ReadOneItem(which, idToFind):
     """
     print("Reading item of type " + which + " with ID=" + str(idToFind) + "...")
     itemArr = []
-
-    # Get the first set of data, which may be everything or may not be
     fullUrl = cfg.instanceurl + "/" + which + "/" + str(idToFind)
     items = GetFromJiraAlign(True, fullUrl)
-    Data = items.json()
-
-    while Data != None:
-        for eachWorkItem in Data:
-            if 'isRecycled' in eachWorkItem:
-                itemIsDel = eachWorkItem['isRecycled']
-            else:
-                itemIsDel = False
-            # ONLY Take items that are not in the recycle bin/deleted
-            if itemIsDel is True:
-                continue;
-            
-            thisItem = {}
-            ExtractItemData(which, eachWorkItem, thisItem)
-            itemArr.append(thisItem)
+    eachWorkItem = items.json()
+    thisItem = {}
+    ExtractItemData(which, eachWorkItem, thisItem)
+    itemArr.append(thisItem)
 
     print('Loaded ' + which + "/" + str(idToFind))
     return itemArr
